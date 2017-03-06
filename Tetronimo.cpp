@@ -115,7 +115,7 @@ void Tetronimo::rotateLeft()
 }
 
 /* Rotates the block to the right if the space isn't occupied 
- *		9/8/15 Updated to use the storeShape function		   */
+ *		9/8/15 Updated to use the storeShape function		   
 void Tetronimo::rotateRight()
 {
 	bool canRotateRight = true;
@@ -142,6 +142,7 @@ void Tetronimo::rotateRight()
 		storeShape(*tmpShape);
 	}
 }
+*/
 
 /* Stores the shape in tmpShape to the 2 dimensional shape 
 *	array using math to access specific items in the tmpShape array. */

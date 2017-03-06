@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Shapes.h"
 
+/* Default constructor for a shape, adds the correct values to the array that are going to be accsessed later */
 Shapes::Shapes()
 {
 	char tmpShapesArray[NUM_SHAPE_TYPES][MATRIX_SIZE][MATRIX_SIZE] = {

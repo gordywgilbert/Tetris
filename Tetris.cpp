@@ -80,7 +80,7 @@ int main()
 				tower.display(&curBlock);	// current block is passed by reference
 				break;
 			case KEY_UP:
-				curBlock.rotateRight();
+				curBlock.rotateLeft();
 				tower.clearScreen();
 				tower.display(&curBlock);	// current block is passed by reference
 				break;
