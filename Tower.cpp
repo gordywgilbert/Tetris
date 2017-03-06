@@ -81,7 +81,7 @@ void Tower::checkLines()
 			}
 			std::cout << std::endl;
 			timer_reset();
-			while (timer_elapsed()<.5){ ; }
+			while (timer_elapsed()<.5){ ; }	// waits until a half a second has passed
 		}
 		int offset = 0;
 		for (int j = (BUCKET_HEIGHT - 1); j >= 0; j--){

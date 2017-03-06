@@ -56,38 +56,38 @@ int main()
 	Tower tower;
 	bool dropped;
 	double droptime;
-	Tetronimo curBlock(&tower);
+	Tetronimo curBlock(&tower);	// pass the tower object by reference
 	while (!done){
-		timer_reset();
-		dropped = 0;
-		droptime = .2;
-		while (timer_elapsed() < droptime){
+		timer_reset();	// reset the timer
+		dropped = 0;	// initialize number of dropped blocks
+		droptime = .2;	// initialize speed of blocks falling
+		while (timer_elapsed() < droptime){		// while less time than droptime has passed
 			if (_kbhit()) {
-				chr = _getch();
+				chr = _getch();	// get the user keyboard input
 			}
 			else {
-				chr = ' ';
+				chr = ' ';	// if no key is entered then chr = ' '
 			}
 			switch (chr) {
 			case KEY_LEFT:
 				curBlock.moveLeft();
 				clearScreen();
-				tower.display(&curBlock);
+				tower.display(&curBlock);	// current block is passed by reference
 				break;
 			case KEY_RIGHT:
 				curBlock.moveRight();
 				clearScreen();
-				tower.display(&curBlock);
+				tower.display(&curBlock);	// current block is passed by reference
 				break;
 			case KEY_DOWN:
 				curBlock.drop();
 				clearScreen();
-				tower.display(&curBlock);
+				tower.display(&curBlock);	// current block is passed by reference
 				break;
 			case KEY_UP:
 				curBlock.rotateLeft();
 				clearScreen();
-				tower.display(&curBlock);
+				tower.display(&curBlock);	// current block is passed by reference
 				break;
 			}
 		}

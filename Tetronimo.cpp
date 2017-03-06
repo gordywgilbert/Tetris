@@ -42,6 +42,7 @@ void Tetronimo::drop()
 	for (int i = 0; i < MATRIX_SIZE; i++){
 		for (int j = 0; j < MATRIX_SIZE; j++){
 			if (shape[i][j] == 'X'){
+				// tower gets dereferenced when -> is used and "tower->bucket" ends up being treated as (*tower).bucket
 				if ((tower->bucket[i + x][j + y + 1] == 'X') ||
 					((j + y + 1) >= BUCKET_HEIGHT)) {
 					tower->add(this);
@@ -61,6 +62,7 @@ void Tetronimo::moveRight()
 	for (int i = 0; i<MATRIX_SIZE; i++){
 		for (int j = 0; j<MATRIX_SIZE; j++){
 			if (shape[i][j] == 'X'){
+				// tower gets dereferenced when -> is used and "tower->bucket" ends up being treated as (*tower).bucket
 				if ((tower->bucket[i + x + 1][j + y] == 'X') ||
 					((i + x + 1)>(BUCKET_WIDTH - 1))) {	// if the shape hits the right wall or an X
 					canMoveRight = false;
@@ -78,6 +80,7 @@ void Tetronimo::moveLeft()
 	for (int i = 0; i<MATRIX_SIZE; i++){
 		for (int j = 0; j<MATRIX_SIZE; j++){
 			if (shape[i][j] == 'X'){
+				// tower gets dereferenced when -> is used and "tower->bucket" ends up being treated as (*tower).bucket
 				if ((tower->bucket[i + x - 1][j + y] == 'X') ||
 					((i + x - 1) < 0)) {			// if the shape hits the left wall or an X
 					canMoveLeft = false;
@@ -95,15 +98,17 @@ void Tetronimo::rotateLeft()
 	char tmpShape[MATRIX_SIZE][MATRIX_SIZE];
 	for (int i = 0; i < MATRIX_SIZE; i++){
 		for (int j = 0; j<MATRIX_SIZE; j++){
-			tmpShape[i][j] = shape[j][MATRIX_SIZE - i];	// Opposite of rotating Right
+			tmpShape[i][j] = shape[j][MATRIX_SIZE - i-1];	// Opposite of rotating Right
 		}
 	}
 	// see if the character stored at the tower pointer is able to rotate
 	for (int i = 0; i < MATRIX_SIZE; i++){
 		for (int j = 0; j < MATRIX_SIZE; j++){
 			if (tmpShape[i][j] == 'X'){
+				// tower gets dereferenced when -> is used and "tower->bucket" ends up being treated as (*tower).bucket
 				if ((tower->bucket[i + x][j + y] == 'X') ||	
-					(i + x < 0) || (i + x >(BUCKET_WIDTH - 1)) ||
+					(i + x < 0) || 
+					(i + x >(BUCKET_WIDTH - 1)) ||
 					(j + y >(BUCKET_HEIGHT - 1))) {
 					canRotateLeft = false;
 				}
@@ -126,16 +131,18 @@ void Tetronimo::rotateRight()
 	char tmpShape[MATRIX_SIZE][MATRIX_SIZE];
 	for (int i = 0; i < MATRIX_SIZE; i++){
 		for (int j = 0; j<MATRIX_SIZE; j++){
-			tmpShape[i][j] = shape[MATRIX_SIZE - j][i];	// Opposite of rotating left
+			tmpShape[i][j] = shape[MATRIX_SIZE - j-1][i];	// Opposite of rotating left
 		}
 	}
 	// see if the character stored at the tower pointer is able to rotate
 	for (int i = 0; i < MATRIX_SIZE; i++){
 		for (int j = 0; j < MATRIX_SIZE; j++){
 			if (tmpShape[i][j] == 'X'){
+				// tower gets dereferenced when -> is used and "tower->bucket" ends up being treated as (*tower).bucket
 				if ((tower->bucket[i + x][j + y] == 'X') ||
-					(i + x < 0) || (i + x >(BUCKET_WIDTH - 1)) ||
-					(j + y >(BUCKET_HEIGHT - 1))) {
+					(i + x < 0) || 
+					(i + x >(BUCKET_WIDTH - 1)) ||
+					(j + y > (BUCKET_HEIGHT - 1))) {
 					canRotateRight = false;
 				}
 			}
