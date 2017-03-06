@@ -1,18 +1,18 @@
-#pragma once
 #include "stdafx.h"
-#include "Shapes.h"
-#include "Tetris.h"
 #include "Tetronimo.h"
 #include "Tower.h"
-#include <cstdlib>
-#include <ctime>
+#include "Timer.h"
+
+#include <windows.h>
 #include <iostream>
 #include <string>
-#include <conio.h>
 
 /* Initialize an empty Tower object */
 Tower::Tower()
 {
+	grandTotalLinesCleared = 0;
+	level = 1;
+	score = 0;
 	for (int i = 0; i < BUCKET_WIDTH; i++) {
 		for (int j = 0; j < BUCKET_HEIGHT; j++) {
 			bucket[i][j] = ' ';
@@ -20,68 +20,94 @@ Tower::Tower()
 	}
 }
 
-/* Tower object destructor */
-Tower::~Tower()
-{}
+/* returns the player's score */
+int Tower::getScore() {
+	return score;
+}
 
-void Tower::checkLines()
-{
-	bool fail = false;
-	int totalCleared = 0;
-	int linesCleared[BUCKET_HEIGHT];
-	char tmpLine[BUCKET_WIDTH];
-	char tmpBucket[BUCKET_WIDTH][BUCKET_HEIGHT];
+/* returns the player's current level */
+int Tower::getLevel() {
+	return level;
+}
+
+/* returns the total number of all lines cleared */
+int Tower::getTotalClearedLines() {
+	return grandTotalLinesCleared;
+}
+
+/* prints the bottom row of # instead of using the clearline method to*/
+void Tower::printBottomRow() {
+	for (int i = 0; i < BUCKET_WIDTH + 2; i++) {
+		std::cout << "#";
+	}
+}
+
+void Tower::initializeTemporaryBucket(char* tmpBucket) {
 	for (int i = 0; i<BUCKET_WIDTH; i++){
 		for (int j = 0; j<BUCKET_HEIGHT; j++){
-			tmpBucket[i][j] = ' ';
+			tmpBucket[i*MATRIX_SIZE + j] = ' ';
 		}
 	}
+}
+
+/* function to check lines for lines to be cleared, also handles scoring */
+void Tower::checkLines()
+{
+	Timer gameTimer;
+	int totalCleared = 0;
+	bool fail = false;
+	bool tetrisScored = false;
+	int linesCleared[BUCKET_HEIGHT];	// declares an array, linesCleared with BUCKET_HEIGHT elements
+	char tmpLine[BUCKET_WIDTH];			// declares a character array of BUCKET_WIDTH
+	level = (grandTotalLinesCleared / 10) + 1;
+	initializeTemporaryBucket(*tmpBucket);
+
 	for (int j = 0; j < BUCKET_HEIGHT; j++){
 		fail = false;
 		for (int i = 0; i< BUCKET_WIDTH; i++){
-			if (bucket[i][j] != 'X'){
+			if (bucket[i][j] != 'X'){	// if the element at bucket[i][j] isnt an X then store ' ' at tmpLine[i]
 				fail = true;
 				tmpLine[i] = ' ';
 			}
 			else{
-				tmpLine[i] = 'X';
+				tmpLine[i] = 'X';		// if the element at bucket[i][j] is an X then store 'X' at tmpLine[i] 
 			}
 		}
-		if (!fail){
-			linesCleared[j] = 1;
-			totalCleared++;
+		if (fail){
+			linesCleared[j] = 0;
 		}
 		else{
-			linesCleared[j] = 0;
+			linesCleared[j] = 1;		// stores 1 at linesCleared[j]
+			totalCleared++;				// increments the total number of lines cleared
+			grandTotalLinesCleared++;
 		}
 	}
 	if (totalCleared > 0){
-		for (int p = 178; p>175; p--){
-			clearScreen();
+		// The ascii codes used for the loop are visible at http://www.cplusplus.com/doc/ascii/ 
+		// it contains the char code 178 (B2 in hex), so it starts there for the fade
+		for (int p = 178; p>175; p--) {			// Three characters that are used to fade away.
 			for (int j = 0; j<BUCKET_HEIGHT; j++){
-				std::cout << "#";
-				if (linesCleared[j] == 1){
+				std::cout << "#";				// print the left wall of the bucket of the bucket
+				if (linesCleared[j] == 1) {		// is this line cleared?
 					for (int i = 0; i<BUCKET_WIDTH; i++){
-						//std::cout << char(p);
+						std::cout << char(p);	// prints out either char(178), char(177) or char(176)
 						if (totalCleared == 4 && i == 3){
-							// user got a tetris
+							addScore(TETRIS_SCORE, level);	// adds the score for a tetris
+							tetrisScored = true;
 						}
 					}
 				}
-				else{
-					for (int i = 0; i<BUCKET_WIDTH; i++){
+				else {
+					for (int i = 0; i<BUCKET_WIDTH; i++) { // the BUCKET_WIDTH+2 is for the walls 
 						std::cout << bucket[i][j];
 					}
 				}
-				std::cout << "#";
-				std::cout << std::endl;
+				std::cout << "#" << std::endl;	// prints the right wall
 			}
-			for (int i = 0; i < BUCKET_WIDTH; i++) {
-				std::cout << "#";
-			}
+			printBottomRow();
 			std::cout << std::endl;
-			timer_reset();
-			while (timer_elapsed()<.5){ ; }	// waits until a half a second has passed
+			gameTimer.resetTimer();
+			while (gameTimer.getElapsedTime() < .5){ ; }	// waits until a half a second has passed
 		}
 		int offset = 0;
 		for (int j = (BUCKET_HEIGHT - 1); j >= 0; j--){
@@ -100,11 +126,51 @@ void Tower::checkLines()
 				bucket[i][j] = tmpBucket[i][j];
 			}
 		}
-
+		// only executes if a tetris score hasn't already been added for the lines removed
+		if (!tetrisScored) {
+			if (totalCleared == 3) {
+				addScore(TRIPLE_LINE_SCORE, level);
+			}
+			else if (totalCleared == 2) {
+				addScore(DOUBLE_LINE_SCORE, level);
+			}
+			else if (totalCleared == 1) {
+				addScore(SINGLE_LINE_SCORE, level);
+			}
+		}
 	}
 }
 
-/* Add a Tetronimo to the bucket and check to see if any lines are cleared or the bucket is filled */
+/* adds the (scoringValue * level) to the variable score */
+void Tower::addScore(int scoringValue, int level) {
+	switch (scoringValue) {
+		case TETRIS_SCORE:
+			score += (TETRIS_SCORE * level);
+			break;
+		case TRIPLE_LINE_SCORE:
+			score += (TRIPLE_LINE_SCORE * level);
+			break;
+		case DOUBLE_LINE_SCORE:
+			score += (DOUBLE_LINE_SCORE * level);
+			break;
+		case SINGLE_LINE_SCORE:
+			score += (SINGLE_LINE_SCORE * level);
+			break;
+	}
+}
+
+/* displays the level, score, and total lines cleared */
+void Tower::showStats() {
+	std::cout << "Level:" << getLevel() << "    Score: " << getScore() << std::endl << "Total Lines Cleared: " << getTotalClearedLines();
+}
+
+/* eventually this should be replaced with a platform independent solution */
+void Tower::clearScreen()
+{
+	system("CLS");	// Old windows specific call to clear the screen.
+}
+
+/* Add a Tetronimo to the bucket and then check to see if any lines are cleared or the bucket is filled */
 void Tower::add(Tetronimo * toAdd)
 {
 	for (int i = 0; i<MATRIX_SIZE; i++){
@@ -115,12 +181,13 @@ void Tower::add(Tetronimo * toAdd)
 		}
 	}
 	checkLines();
-	if (toAdd->y < 1){
-		clearScreen();
-		std::cout << "You Lose!" << std::endl;
-		std::cout << std::endl << std::endl;
+	if (toAdd->y < 1){	// character is above the rim of the bucket
+		clearScreen();	// call to the clearScreen() function
+		std::cout << "You Lose!" << std::endl;	// output you lose
+		std::cout << std::endl << std::endl;	// add a few spaces
+		showStats();	// display the stats for the game
 		system("PAUSE");
-		exit(1);
+		exit(1);	// exit the application with code 1, a clean exit
 	}
 }
 
@@ -128,7 +195,7 @@ void Tower::add(Tetronimo * toAdd)
 void Tower::display(Tetronimo * toDisplay)
 {
 	bool displayChar = true;
-	char tmpBucket[BUCKET_WIDTH][BUCKET_HEIGHT];
+	memset(tmpBucket, ' ', sizeof(tmpBucket)); // Fill the array with zeros
 	for (int i = 0; i < MATRIX_SIZE; i++){
 		for (int j = 0; j < MATRIX_SIZE; j++){
 			if ((toDisplay->shape[i][j] == 'X') &&
@@ -152,11 +219,10 @@ void Tower::display(Tetronimo * toDisplay)
 				std::cout << bucket[i][j];
 			}
 		}
-		std::cout << "#";
-		std::cout << std::endl;
+		std::cout << "#" << std::endl;
 	}
-	for (int i = 0; i < BUCKET_WIDTH + 2 ; i++) { // the BUCKET_WIDTH+2 is for the walls 
-		std::cout << "#";
-	}
-	std::cout << std::endl;
+	
+	printBottomRow();	// prints the bottom row of #
+	std::cout << std::endl;	//
+	showStats();
 }

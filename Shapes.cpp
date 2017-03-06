@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "Tetris.h"
+#include "Shapes.h"
 
 Shapes::Shapes()
 {
@@ -54,4 +54,4 @@ Shapes::Shapes()
 			}
 		}
 	}
-}
+};

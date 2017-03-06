@@ -1,26 +1,17 @@
 #include "stdafx.h"
-#include "Tetris.h"
-#include "Shapes.h"
 #include "Tetronimo.h"
-#include <cstdlib>
-#include <ctime>
 #include <iostream>
-#include <string>
-#include <conio.h>
+#include <random>
 
+/* Class constructor for Tetronimos.*/
 Tetronimo::Tetronimo(Tower * tow)
 {
-	srand((unsigned)time(NULL));	// initialize random seed once.
-	nextUp = randInt(1, NUM_SHAPE_TYPES);			// generate a random number that is used to determine the shape
+	nextUp = selectRandomShape();	// generate a random number that is used to determine the shape
 	x = 3;							// set initial x value for the block
 	y = -1;							// set initial y value for the block
 	tower = tow;					// save the values to the memory location for tower
-	setBlock(randInt(1, NUM_SHAPE_TYPES) % NUM_SHAPE_TYPES);	// create a block based on the random number
+	setBlock(selectRandomShape());	// create a block based on the random number
 }
-
-/* Destructor to free up memory */
-Tetronimo::~Tetronimo()
-{}
 
 /* Function for creating a new Tetronimo and choosing the next Tetronimo */
 void Tetronimo::setBlock(int nextBlockNumber)
@@ -35,7 +26,8 @@ void Tetronimo::setBlock(int nextBlockNumber)
 	y = -1;							// set the y value for the next shape
 }
 
-/* Drops the Tetronimo one cell if the cell isn't occupied or out of bounds */
+/* Drops the Tetronimo one cell if the cell 
+*	isn't occupied and the coordinate isn't out of bounds */
 void Tetronimo::drop()
 {
 	bool droppable = true;
@@ -46,7 +38,7 @@ void Tetronimo::drop()
 				if ((tower->bucket[i + x][j + y + 1] == 'X') ||
 					((j + y + 1) >= BUCKET_HEIGHT)) {
 					tower->add(this);
-					setBlock(randInt(1, NUM_SHAPE_TYPES));
+					setBlock(selectRandomShape());
 					droppable = false;
 				}
 			}
@@ -55,7 +47,8 @@ void Tetronimo::drop()
 	if (droppable){ y++; }
 }
 
-/* Moves the Tetronimo one cell to the right if the cell isn't occupied or out of bounds */
+/* Moves the Tetronimo one cell to the right 
+*	if the cell isn't occupied or out of bounds */
 void Tetronimo::moveRight()
 {
 	bool canMoveRight = true;
@@ -73,7 +66,8 @@ void Tetronimo::moveRight()
 	if (canMoveRight){ x++; }
 }
 
-/* Moves the Tetronimo one cell to the left if the cell isn't occupied or out of bounds */
+/* Moves the Tetronimo one cell to the left if 
+*	the cell isn't occupied or out of bounds */
 void Tetronimo::moveLeft()
 {
 	bool canMoveLeft = true;
@@ -91,11 +85,11 @@ void Tetronimo::moveLeft()
 	if (canMoveLeft){ x--; }
 }
 
-/* Rotates the block to the left if the space isn't occupied  */
+/* Rotates the block to the left if the space isn't occupied   
+*		9/8/15 Updated to use the storeShape function		   */
 void Tetronimo::rotateLeft()
 {
 	bool canRotateLeft = true;
-	char tmpShape[MATRIX_SIZE][MATRIX_SIZE];
 	for (int i = 0; i < MATRIX_SIZE; i++){
 		for (int j = 0; j<MATRIX_SIZE; j++){
 			tmpShape[i][j] = shape[j][MATRIX_SIZE - i-1];	// Opposite of rotating Right
@@ -116,19 +110,15 @@ void Tetronimo::rotateLeft()
 		}
 	}
 	if (canRotateLeft){
-		for (int i = 0; i < MATRIX_SIZE; i++){
-			for (int j = 0; j<MATRIX_SIZE; j++){
-				shape[i][j] = tmpShape[i][j];
-			}
-		}
+		storeShape(*tmpShape);
 	}
 }
 
-/* Rotates the block to the right if the space isn't occupied */
+/* Rotates the block to the right if the space isn't occupied 
+ *		9/8/15 Updated to use the storeShape function		   */
 void Tetronimo::rotateRight()
 {
 	bool canRotateRight = true;
-	char tmpShape[MATRIX_SIZE][MATRIX_SIZE];
 	for (int i = 0; i < MATRIX_SIZE; i++){
 		for (int j = 0; j<MATRIX_SIZE; j++){
 			tmpShape[i][j] = shape[MATRIX_SIZE - j-1][i];	// Opposite of rotating left
@@ -149,10 +139,24 @@ void Tetronimo::rotateRight()
 		}
 	}
 	if (canRotateRight){
-		for (int i = 0; i < MATRIX_SIZE; i++){
-			for (int j = 0; j<MATRIX_SIZE; j++){
-				shape[i][j] = tmpShape[i][j];
-			}
+		storeShape(*tmpShape);
+	}
+}
+
+/* Stores the shape in tmpShape to the 2 dimensional shape 
+*	array using math to access specific items in the tmpShape array. */
+void Tetronimo::storeShape(char* tmpShape) {
+	for (int i = 0; i < MATRIX_SIZE; i++){
+		for (int j = 0; j<MATRIX_SIZE; j++){
+			shape[i][j] = tmpShape[i*MATRIX_SIZE + j];
 		}
 	}
+}
+
+/* Uses a random device to seed the generator, providing a better alternative to the rand() function */
+int Tetronimo::selectRandomShape() {
+	std::random_device rd;   // non-deterministic generator
+	std::mt19937 gen(rd());  // to seed mersenne twister.
+	std::uniform_int_distribution<> dist(0, 6); // distribute results between 0 and 6 inclusive.
+	return dist(gen);
 }
